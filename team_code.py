@@ -321,7 +321,7 @@ def get_feature(recording):
 def make_murmur_model(X_train, y_train):
     verbose, epochs, batch_size = 1, 64, 0
     n_samples, n_features, n_outputs = X_train.shape[0], X_train.shape[1], 3
-    class_weight = {0: 3.0,
+    class_weight = {0: 2.0,
                 1: 2.0,
                 2: 1.0}
 
@@ -336,7 +336,8 @@ def make_murmur_model(X_train, y_train):
 def make_outcome_model(X_train, y_train):
     verbose, epochs, batch_size = 1, 64, 0
     n_samples, n_features, n_timesteps, n_outputs = X_train.shape[0], 1, 2400, 2
-
+    class_weight = {0: 2.0,
+                1: 1.0}
 
     outcome_model=Sequential()
     outcome_model.add(Bidirectional(LSTM(80, input_shape=(2400, 2))))
