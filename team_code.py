@@ -49,7 +49,9 @@ def train_challenge_model(data_folder, model_folder, verbose):
     #show GPU state and adjuste settings
     print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))
     #os.environ["TF_FORCE_GPU_ALLOW_GROWTH"]="true"
-
+    gpu_devices = tensorflow.config.experimental.list_physical_devices('GPU')
+    for device in gpu_devices:
+        tensorflow.config.experimental.set_memory_growth(device, True)
 
     murmur_classes = ['Present', 'Unknown', 'Absent']
     num_murmur_classes = len(murmur_classes)
@@ -73,28 +75,28 @@ def train_challenge_model(data_folder, model_folder, verbose):
         num_locations = get_num_locations(current_patient_data)
         for location in range(num_locations):
             recording = current_recordings[location]
-            #beats_raw, beats_percussive = get_feature(recording)
-            #percussive.append(beats_percussive)
-            #raw.append(beats_raw)
-            #save_percussive = beats_percussive.tolist()
-            #save_raw = beats_raw.tolist()
-            #json.dump(save_percussive, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + 'save.json'), 'w', encoding='utf-8'),
-            #         separators=(',', ':'),
-            #          sort_keys=True,
-            #          indent=4)
-            #json.dump(save_raw, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + str(9) + 'save.json'), 'w', encoding='utf-8'),
-            #         separators=(',', ':'),
-            #          sort_keys=True,
-            #          indent=4)
-            load_percussive = codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + 'save.json'), 'r', encoding='utf-8').read()
-            beats_percussive = json.loads(load_percussive)
-            for single_HB in range(len(beats_percussive)):
-                percussive.append(beats_percussive[single_HB])
-            load_raw = codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + str(9) + 'save.json'), 'r', encoding='utf-8').read()
-            beats_raw = json.loads(load_raw)
-            for single_HB in range(len(beats_raw)):
-                raw.append(beats_raw[single_HB])
-#
+            beats_normalized, beats_percussive = get_feature(recording)
+            percussive.append(beats_percussive)
+            raw.append(beats_normalized)
+            save_percussive = beats_percussive.tolist()
+            save_normalized = beats_normalized.tolist()
+            json.dump(save_percussive, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + 'save.json'), 'w', encoding='utf-8'),
+                     separators=(',', ':'),
+                      sort_keys=True,
+                      indent=4)
+            json.dump(save_normalized, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + str(9) + 'save.json'), 'w', encoding='utf-8'),
+                     separators=(',', ':'),
+                      sort_keys=True,
+                      indent=4)
+            #load_percussive = codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + 'save.json'), 'r', encoding='utf-8').read()
+            #beats_percussive = json.loads(load_percussive)
+            #for single_HB in range(len(beats_percussive)):
+            #    percussive.append(beats_percussive[single_HB])
+            #load_raw = codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + str(9) + 'save.json'), 'r', encoding='utf-8').read()
+            #beats_raw = json.loads(load_raw)
+            #for single_HB in range(len(beats_raw)):
+            #    raw.append(beats_raw[single_HB])
+
         # Extract labels with integer for 10 beats per patient
         for location in range(num_locations):
             murmur = get_murmur(current_patient_data)
@@ -111,14 +113,13 @@ def train_challenge_model(data_folder, model_folder, verbose):
                 current_outcome[j] = 1
             for y in range(10):
                 outcomes.append(current_outcome)
-
+    print(percussive[0][:10], raw[0][:10])
     merge=[]
     for i,j in zip(percussive,raw):
         for l in range(2400):
             merge.append((i[l],j[l]))
-    merge = np.vstack(merge)
-    print(percussive[:2], raw[:2])
-    print(np.shape(merge), merge[:20])
+    merge = np.vstack(merge).reshape(len(percussive), 2400, 2).astype('float32')
+    print(np.shape(merge), merge[0][:20])
     murmurs = np.vstack(murmurs)
     outcomes = np.vstack(outcomes)
 
@@ -126,13 +127,13 @@ def train_challenge_model(data_folder, model_folder, verbose):
     if verbose >= 1:
         print('Training model...')
     ##Defining Bidirection LSTM
-    #murmur_model = make_murmur_model(percussive.reshape(percussive.shape[0], 2400, 1).astype('float32'), murmurs)
-    #murmur_weights = murmur_model.get_weights()
-    #murmur_json = murmur_model.to_json()
-    #outcome_model = make_outcome_model(percussive.reshape(percussive.shape[0], 2400, 1).astype('float32'), outcomes)
-    #outcome_weights = outcome_model.get_weights()
-    #outcome_json = outcome_model.to_json()
-    # Save the model.
+    murmur_model = make_murmur_model(merge, murmurs)
+    murmur_weights = murmur_model.get_weights()
+    murmur_json = murmur_model.to_json()
+    outcome_model = make_outcome_model(merge, outcomes)
+    outcome_weights = outcome_model.get_weights()
+    outcome_json = outcome_model.to_json()
+    #Save the model.
     save_challenge_model(model_folder, murmur_json, outcome_json, murmur_weights, outcome_weights)
 
     if verbose >= 1:
@@ -165,11 +166,10 @@ def run_challenge_model(model, data, recordings, verbose):
     num_locations = get_num_locations(data)
     for i in range(num_locations):
         recording = recordings[i]
-        _,features = get_feature(recording)
-        features = features.reshape(10, 1, 2400, 1)
+        beats_normalized, beats_percussive = get_feature(recording)
+        features = features.reshape(10, 1, 2400, 2)
         for single_HB in range(10):
-            current_murmur_probabilities = murmur_model.predict(features[single_HB])
-            print(np.shape(current_murmur_probabilities))
+            current_murmur_probabilities = murmur_model.predict(features[single_HB
             current_outcome_probabilities= outcome_model.predict(features[single_HB])
             murmur_probabilities = murmur_probabilities + current_murmur_probabilities
             outcome_probabilities = outcome_probabilities + current_outcome_probabilities
@@ -321,27 +321,24 @@ def get_feature(recording):
 def make_murmur_model(X_train, y_train):
     verbose, epochs, batch_size = 1, 64, 0
     n_samples, n_features, n_outputs = X_train.shape[0], X_train.shape[1], 3
-    class_weight = {0: 3.0,
-                1: 2.0,
-                2: 1.0}
+
 
     murmur_model=Sequential()
-    murmur_model.add(Bidirectional(LSTM(100, input_shape=(2400, 1))))
+    murmur_model.add(Bidirectional(LSTM(100, input_shape=(2400, 2))))
     murmur_model.add(Dense(n_outputs, activation='softmax'))
-    murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[0.4,0.4,0.2])
-    murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
+    murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'])
+    murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
     return murmur_model
 
 #Define Outcome LSTM Model with class weights and early stopping for cross validation
 def make_outcome_model(X_train, y_train):
     verbose, epochs, batch_size = 1, 64, 0
     n_samples, n_features, n_timesteps, n_outputs = X_train.shape[0], 1, 2400, 2
-    class_weight = {0: 2.0,
-                1: 1.0}
+
 
     outcome_model=Sequential()
-    outcome_model.add(Bidirectional(LSTM(80, input_shape=(2400, 1))))
+    outcome_model.add(Bidirectional(LSTM(80, input_shape=(2400, 2))))
     outcome_model.add(Dense(n_outputs, activation='softmax'))
-    outcome_model.compile(loss='categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[0.6,0.4])
-    outcome_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
+    outcome_model.compile(loss='categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'])
+    outcome_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
     return outcome_model
