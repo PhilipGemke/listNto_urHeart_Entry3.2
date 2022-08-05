@@ -169,7 +169,7 @@ def run_challenge_model(model, data, recordings, verbose):
         beats_normalized, beats_percussive = get_feature(recording)
         features = features.reshape(10, 1, 2400, 2)
         for single_HB in range(10):
-            current_murmur_probabilities = murmur_model.predict(features[single_HB
+            current_murmur_probabilities = murmur_model.predict(features[single_HB])
             current_outcome_probabilities= outcome_model.predict(features[single_HB])
             murmur_probabilities = murmur_probabilities + current_murmur_probabilities
             outcome_probabilities = outcome_probabilities + current_outcome_probabilities
