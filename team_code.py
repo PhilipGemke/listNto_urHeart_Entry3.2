@@ -306,7 +306,7 @@ def get_feature(recording):
                 percussive_repeated.append(beats_percussive[i])
                 percussive_repeated.append(beats_percussive[i])
                 while len(repeated) < 11:
-                    for i in range(len(beats_raw)):
+                    for i in range(len(beats_normalized)):
                         repeated.append(beats_normalized[i])
                         repeated.append(beats_normalized[i])
                         percussive_repeated.append(beats_percussive[i])
