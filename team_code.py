@@ -13,7 +13,6 @@ import numpy as np, os, tensorflow, json, joblib, pydub, librosa, presets, antro
 from tensorflow import keras
 from keras.models import Sequential, model_from_json
 from keras.layers import Dense, Dropout, LSTM, Bidirectional
-from keras.callbacks import EarlyStopping
 from pydub import AudioSegment, effects
 from presets import Preset #preset for open source music classification librosa
 import librosa as _librosa #dummy import for preset
@@ -71,7 +70,7 @@ def train_challenge_model(data_folder, model_folder, verbose):
         current_patient_data = load_patient_data(patient_files[i])
         current_recordings = load_recordings(data_folder, current_patient_data)
 
-        # Extract features.
+        # Extract features. Optionally save and load them to minimize calculating time
         num_locations = get_num_locations(current_patient_data)
         for location in range(num_locations):
             recording = current_recordings[location]
@@ -123,10 +122,10 @@ def train_challenge_model(data_folder, model_folder, verbose):
     murmurs = np.vstack(murmurs)
     outcomes = np.vstack(outcomes)
 
-    # Train the model.
+    # Train the model for murmur and outcome seperately and convert to json (to save models and weights in one data)
     if verbose >= 1:
         print('Training model...')
-    ##Defining Bidirection LSTM
+
     murmur_model = make_murmur_model(merge, murmurs)
     murmur_weights = murmur_model.get_weights()
     murmur_json = murmur_model.to_json()
@@ -148,10 +147,12 @@ def load_challenge_model(model_folder, verbose):
 # Run your trained model. This function is *required*. You should edit this function to add your code, but do *not* change the
 # arguments of this function.
 def run_challenge_model(model, data, recordings, verbose):
+    #extract info from model.data
     murmur_json = model['murmur_json']
     murmur_weights = model['murmur_weights']
     outcome_json = model['outcome_json']
     outcome_weights = model['outcome_weights']
+    #define classes
     murmur_classes = ['Present', 'Unknown', 'Absent']
     outcome_classes = ['Abnormal', 'Normal']
 
@@ -221,6 +222,7 @@ def save_challenge_model(model_folder, murmur_json, outcome_json, murmur_weights
 
 
 # Create individual heart beats by using audio bpm algorithm and finding local peaks
+# Return normalized heart beats and percussion filtered
 def get_feature(recording):
 
     def match_target_amplitude(sound, target_dBFS):
@@ -253,7 +255,6 @@ def get_feature(recording):
     std_percussion = list()
     for i in range(len(beats_raw)):
         std_percussion.append(np.std(beats_raw[i]))
-    #beats_raw.sort(key=ant.app_entropy)
 
     beats_normalized = list()
     for i in range(len(Peaks)):
@@ -278,10 +279,7 @@ def get_feature(recording):
     beats_percussive = beats_percussive.tolist()
     beats_percussive.sort(key=ant.app_entropy)
     beats_percussive = np.array(beats_percussive)
-    #std = list()
-    #for i in range(len(beats_raw)):
-    #    std.append(np.std(beats_raw[i]))
-    #beats_raw = np.array(beats_raw)[std<np.mean(std)]
+
     if len(beats_normalized) < 11:
         if len(beats_normalized)==0:
             if len(recording_percussive) >24001:
