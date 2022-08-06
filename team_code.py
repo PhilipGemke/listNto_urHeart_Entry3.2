@@ -122,11 +122,11 @@ def train_challenge_model(data_folder, model_folder, verbose):
     #merge for feature extraction
     percussive = np.vstack(percussive)
     normalized = np.vstack(normalized)
-    print(percussive, normalized)
     merge=[]
     for i in range(len(percussive)):
         merge.append(np.stack((percussive[i], normalized[i]), axis=1))
     merge = np.array(merge).astype('float32')
+
 
     ## merge for json saved files
     #merge=[]
@@ -179,15 +179,14 @@ def run_challenge_model(model, data, recordings, verbose):
     outcome_model.set_weights(outcome_weights)
     murmur_model = model_from_json(murmur_json)
     murmur_model.set_weights(murmur_weights)
-    features = list()
     num_locations = get_num_locations(data)
     for i in range(num_locations):
         recording = recordings[i]
         beats_normalized, beats_percussive = get_feature(recording)
-        features = features.reshape(10, 1, 2400, 2)
+        features = np.array([beats_normalized, beats_percussive])
         for single_HB in range(10):
-            current_murmur_probabilities = murmur_model.predict(features[single_HB])
-            current_outcome_probabilities= outcome_model.predict(features[single_HB])
+            current_murmur_probabilities = murmur_model.predict(np.array([np.stack((beats_percussive[single_HB], beats_normalized[single_HB]), axis=1)]))
+            current_outcome_probabilities= outcome_model.predict(np.array([np.stack((beats_percussive[single_HB], beats_normalized[single_HB]), axis=1)]))
             murmur_probabilities = murmur_probabilities + current_murmur_probabilities
             outcome_probabilities = outcome_probabilities + current_outcome_probabilities
     murmur_probability = murmur_probabilities/(10*num_locations)
@@ -340,9 +339,9 @@ def make_murmur_model(X_train, y_train):
                 2: 1.0}
 
     murmur_model=Sequential()
-    murmur_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2),return_sequences=True)))
-    murmur_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2))))
-    murmur_model.add(Dense(10, activation='relu'))
+    murmur_model.add(Bidirectional(LSTM(50, input_shape=(2400, 2),return_sequences=True)))
+    murmur_model.add(Bidirectional(LSTM(50, input_shape=(2400, 2))))
+    murmur_model.add(Dense(50, activation='relu'))
     murmur_model.add(Dense(n_outputs, activation='softmax'))
     murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[3.0,2.0,1.0])
     murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
@@ -356,9 +355,9 @@ def make_outcome_model(X_train, y_train):
                 1: 1.0}
 
     outcome_model=Sequential()
-    outcome_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2), return_sequences=True)))
-    outcome_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2))))
-    outcome_model.add(Dense(10, activation='relu'))
+    outcome_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2), return_sequences=True)))
+    outcome_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2))))
+    outcome_model.add(Dense(40, activation='relu'))
     outcome_model.add(Dense(n_outputs, activation='softmax'))
     outcome_model.compile(loss='categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'])
     outcome_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
