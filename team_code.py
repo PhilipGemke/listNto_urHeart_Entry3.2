@@ -339,11 +339,11 @@ def make_murmur_model(X_train, y_train):
                 2: 1.0}
 
     murmur_model=Sequential()
-    murmur_model.add(Bidirectional(LSTM(50, input_shape=(2400, 2),return_sequences=True)))
-    murmur_model.add(Bidirectional(LSTM(50, input_shape=(2400, 2))))
-    murmur_model.add(Dense(50, activation='relu'))
+    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2),return_sequences=True)))
+    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2))))
+    murmur_model.add(Dense(25, activation='relu'))
     murmur_model.add(Dense(n_outputs, activation='softmax'))
-    murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[3.0,2.0,1.0])
+    murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[3.0,2.0,1.0)
     murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
     return murmur_model
 
@@ -355,9 +355,9 @@ def make_outcome_model(X_train, y_train):
                 1: 1.0}
 
     outcome_model=Sequential()
-    outcome_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2), return_sequences=True)))
-    outcome_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2))))
-    outcome_model.add(Dense(40, activation='relu'))
+    outcome_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2), return_sequences=True)))
+    outcome_model.add(Bidirectional(LSTM(20, input_shape=(2400, 2))))
+    outcome_model.add(Dense(10, activation='relu'))
     outcome_model.add(Dense(n_outputs, activation='softmax'))
     outcome_model.compile(loss='categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'])
     outcome_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
