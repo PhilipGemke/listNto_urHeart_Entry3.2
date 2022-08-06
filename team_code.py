@@ -83,9 +83,9 @@ def train_challenge_model(data_folder, model_folder, verbose):
             #save_percussive = beats_percussive.tolist()
             #save_normalized = beats_normalized.tolist()
             #json.dump(save_percussive, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + 'save.json'), 'w', encoding='utf-8'),
-                     separators=(',', ':'),
-                      sort_keys=True,
-                      indent=4)
+            #         separators=(',', ':'),
+            #          sort_keys=True,
+            #          indent=4)
             #json.dump(save_normalized, codecs.open(os.path.join(model_folder, str(get_patient_id(current_patient_data))+ str(location) + str(9) + 'save.json'), 'w', encoding='utf-8'),
             #         separators=(',', ':'),
             #          sort_keys=True,
