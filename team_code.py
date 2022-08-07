@@ -45,12 +45,12 @@ def train_challenge_model(data_folder, model_folder, verbose):
     if verbose >= 1:
         print('Extracting features and labels from the Challenge data...')
 
-    #show GPU state and adjuste settings
-    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))
-    os.environ["TF_FORCE_GPU_ALLOW_GROWTH"]="true"
-    gpu_devices = tensorflow.config.experimental.list_physical_devices('GPU')
-    for device in gpu_devices:
-        tensorflow.config.experimental.set_memory_growth(device, True)
+    ##show GPU state and adjuste settings
+    #print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))
+    #os.environ["TF_FORCE_GPU_ALLOW_GROWTH"]="true"
+    #gpu_devices = tensorflow.config.experimental.list_physical_devices('GPU')
+    #for device in gpu_devices:
+    #    tensorflow.config.experimental.set_memory_growth(device, True)
 
     murmur_classes = ['Present', 'Unknown', 'Absent']
     num_murmur_classes = len(murmur_classes)
