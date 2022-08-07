@@ -196,21 +196,23 @@ def run_challenge_model(model, data, recordings, verbose):
 
     # Calculate outcome_label using a tradeoff specifity --> sensitivity
     murmur_labels = np.zeros(len(murmur_classes), dtype=np.int_)
-    PU_class = murmur_probabilities[:2]
-    print(PU_class)
-    if PU_class.max() > 0.3:
+    PU_class = murmur_probability[:2]
+    U_class = murmur_probability[1:2]
+    if PU_class.max() > 0.4:
         idx = np.argmax(PU_class)
+    if U_class.max() > 0.2:
+        idx = 1
     else:
-        idx = np.argmax(murmur_probabilities)
+        idx = np.argmax(murmur_probability)
     murmur_labels[idx] = 1
 
     # Calculate outcome_label using a tradeoff specifity --> sensitivity
     outcome_labels = np.zeros(len(outcome_classes), dtype=np.int_)
-    A_class = outcome_probabilities[:1]
-    if A_class.max() > 0.4:
+    A_class = outcome_probability[:1]
+    if A_class.max() > 0.45:
         idx = np.argmax(A_class)
     else:
-        idx = np.argmax(outcome_probabilities)
+        idx = np.argmax(outcome_probability)
     outcome_labels[idx] = 1
 
 
@@ -339,9 +341,9 @@ def make_murmur_model(X_train, y_train):
                 2: 1.0}
 
     murmur_model=Sequential()
-    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2),return_sequences=True)))
-    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2))))
-    murmur_model.add(Dense(25, activation='relu'))
+    murmur_model.add(Bidirectional(LSTM(30, input_shape=(2400, 2),return_sequences=True)))
+    murmur_model.add(Bidirectional(LSTM(30, input_shape=(2400, 2))))
+    murmur_model.add(Dense(10, activation='relu'))
     murmur_model.add(Dense(n_outputs, activation='softmax'))
     murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[3.0,2.0,1.0])
     murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
