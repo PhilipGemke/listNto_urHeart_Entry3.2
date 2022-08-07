@@ -302,7 +302,7 @@ def get_feature(recording):
             if len(recording_percussive) >24001:
                 steps = range(0,24001,2400)
                 normalized_exception = []
-                percussive_exception = []
+                percussiv20e_exception = []
                 for i in range(10):
                     normalized_exception.append(recording[steps[i]:steps[i+1]])
                     percussive_exception.append(recording_percussive[steps[i]:steps[i+1]])
@@ -341,9 +341,9 @@ def make_murmur_model(X_train, y_train):
                 2: 1.0}
 
     murmur_model=Sequential()
-    murmur_model.add(Bidirectional(LSTM(32, input_shape=(2400, 2),return_sequences=True)))
-    murmur_model.add(Bidirectional(LSTM(32, input_shape=(2400, 2))))
-    murmur_model.add(Dense(16, activation='relu'))
+    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2),return_sequences=True)))
+    murmur_model.add(Bidirectional(LSTM(40, input_shape=(2400, 2))))
+    murmur_model.add(Dense(20, activation='relu'))
     murmur_model.add(Dense(n_outputs, activation='softmax'))
     murmur_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', weighted_metrics=['acc'], loss_weights=[3.0,2.0,1.0])
     murmur_model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose, class_weight=class_weight)
