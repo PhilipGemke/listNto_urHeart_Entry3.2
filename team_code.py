@@ -198,7 +198,6 @@ def run_challenge_model(model, data, recordings, verbose):
     murmur_labels = np.zeros(len(murmur_classes), dtype=np.int_)
     PU_class = murmur_probability[:2]
     U_class = murmur_probability[1:2]
-    print(PU_class, np.max(PU_class))
     if np.max(PU_class) > 0.4:
         idx = 0
     elif np.max(U_class) > 0.2:
