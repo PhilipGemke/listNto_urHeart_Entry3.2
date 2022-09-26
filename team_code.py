@@ -275,11 +275,11 @@ def get_feature(recording):
 
     beats_normalized = list()
     for i in range(len(Peaks)):
-        beat = recording[Peaks[i]-1200:Peaks[i]+1200]
+        beat = np_normalized[Peaks[i]-1200:Peaks[i]+1200]
         if len(beat)==2400:
             beats_normalized.append(beat)
         else:
-            beats_normalized.append(recording[2000:4400])
+            beats_normalized.append(np_normalized[2000:4400])
     beats_normalized = np.array(beats_normalized)[std_percussion<np.mean(std_percussion)]
     beats_normalized = beats_normalized.tolist()
     beats_normalized.sort(key=ant.app_entropy)
@@ -287,11 +287,11 @@ def get_feature(recording):
 
     beats_percussive = list()
     for i in range(len(Peaks)):
-        beat = recording[Peaks[i]-1200:Peaks[i]+1200]
+        beat = recording_percussive[Peaks[i]-1200:Peaks[i]+1200]
         if len(beat)==2400:
             beats_percussive.append(beat)
         else:
-            beats_percussive.append(recording[2000:4400])
+            beats_percussive.append(recording_percussive[2000:4400])
     beats_percussive = np.array(beats_percussive)[std_percussion<np.mean(std_percussion)]
     beats_percussive = beats_percussive.tolist()
     beats_percussive.sort(key=ant.app_entropy)
