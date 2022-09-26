@@ -1,0 +1,27 @@
+FROM nvidia/cuda:11.2.1-base-ubuntu20.04
+CMD nvidia-smi
+
+## The MAINTAINER instruction sets the author field of the generated images.
+MAINTAINER philip.gemke@tu-braunschweig.de
+
+## DO NOT EDIT the 3 lines.
+RUN mkdir /physionet
+COPY ./ /physionet
+WORKDIR /physionet
+
+## Install your dependencies here using apt install, etc.
+RUN apt-get -y update
+RUN apt-get install -y libsndfile1 python3-pip wget
+
+## Include the following line if you have a requirements.txt file.
+RUN pip install -r requirements.txt
+
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+RUN bash ./Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+RUN echo 'PATH="$PATH:/root/miniconda/bin/"' >> /etc/environment
+RUN /root/miniconda/bin/conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 -y
+RUN echo 'LD_LIBRARY_PATH="/root/miniconda/lib/"' >> /root/.bashrc
+
+WORKDIR /usr/bin
+RUN ln -s ./python3 python
+WORKDIR /physionet
